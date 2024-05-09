@@ -1,0 +1,3 @@
+Hoje eu fiz a api para o suporte legado.
+Preciso arrumar algumas coisas na classe de packageManager,
+ e utilizar a api normal. Ela está dando erro pois eu troquei alguns códigos ali.
