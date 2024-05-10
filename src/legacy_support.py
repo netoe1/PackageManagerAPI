@@ -341,198 +341,81 @@ Public License instead of this License.
 
 """
 
-# Importing api's
-import apt_pkg
-import dnf  
 
-from utils import detect_package_manager
-from legacy_support import PacmanMgr,ApkMgr,ZypperMgr
+import subprocess
 
-# Using Formal API.
-class AptMgr:
-    def __init__(self):
-        # Initialize the apt_pkg module
-        apt_pkg.init()
+class PacmanMgr:
+    def list_packages(self):
+        command = ["pacman", "-Q"]
+        return self._execute_command(command)
 
-    def update_package(self, package_name):
-        # Update a specific package
-        try:
-            cache = apt_pkg.Cache()
-            if package_name in cache.keys():
-                cache[package_name].mark_install()
-            else:
-                print("Package not found.")
-        except Exception as e:
-            print("Error updating package:", e)
-
-    def search_package(self, package_name):
-        # Search for a package in the APT cache
-        try:
-            cache = apt_pkg.Cache()
-            package_found = False
-            for pkg in cache.keys():
-                if package_name in pkg:
-                    print(pkg)
-                    package_found = True
-            if not package_found:
-                print("Package not found.")
-        except Exception as e:
-            print("Error searching package:", e)
-
-    def install_package(self, package_name):
-        # Install a package
-        try:
-            cache = apt_pkg.Cache()
-            if package_name in cache.keys():
-                cache[package_name].mark_install()
-            else:
-                print("Package not found.")
-        except Exception as e:
-            print("Error installing package:", e)
+    def add_package(self, package_name):
+        command = ["pacman", "-S", package_name]
+        return self._execute_command(command)
 
     def remove_package(self, package_name):
-        # Remove a package
+        command = ["pacman", "-R", package_name]
+        return self._execute_command(command)
+
+    def update_packages(self):
+        command = ["pacman", "-Syu"]
+        return self._execute_command(command)
+
+    def _execute_command(self, command):
         try:
-            cache = apt_pkg.Cache()
-            if package_name in cache.keys():
-                cache[package_name].mark_delete()
-            else:
-                print("Package not found.")
-        except Exception as e:
-            print("Error removing package:", e)
+            result = subprocess.run(command, capture_output=True, text=True, check=True)
+            return result.stdout
+        except subprocess.CalledProcessError as e:
+            print(f"Error: {e}")
+            return None
+        
+class ApkMgr:
+    def list_packages(self):
+        command = ["apk", "info"]
+        return self._execute_command(command)
 
-    def clear_cache(self):
-        # Clear the APT cache
+    def add_package(self, package_name):
+        command = ["apk", "add", package_name]
+        return self._execute_command(command)
+
+    def remove_package(self, package_name):
+        command = ["apk", "del", package_name]
+        return self._execute_command(command)
+
+    def update_packages(self):
+        command = ["apk", "upgrade"]
+        return self._execute_command(command)
+
+    def _execute_command(self, command):
         try:
-            apt_pkg.init_config()
-            apt_pkg.init_system()
-            apt_pkg.clean()
-        except Exception as e:
-            print("Error clearing cache:", e)
+            result = subprocess.run(command, capture_output=True, text=True, check=True)
+            return result.stdout
+        except subprocess.CalledProcessError as e:
+            print(f"Error: {e}")
+            return None
+        
+class ZypperMgr:
+    def list_packages(self):
+        command = ["zypper", "search", "--installed-only"]
+        return self._execute_command(command)
 
-    def commit_changes(self):
-        # Commit changes made to package states
+    def add_package(self, package_name):
+        command = ["zypper", "install", package_name]
+        return self._execute_command(command)
+
+    def remove_package(self, package_name):
+        command = ["zypper", "remove", package_name]
+        return self._execute_command(command)
+
+    def update_packages(self):
+        command = ["zypper", "update"]
+        return self._execute_command(command)
+
+    def _execute_command(self, command):
         try:
-            apt_pkg.commit()
-        except Exception as e:
-            print("Error committing changes:", e)
-class DnfMgr:
-     
-  def __init__(self):
-    # Initialize the DNF base object
-    self.base = dnf.Base()
+            result = subprocess.run(command, capture_output=True, text=True, check=True)
+            return result.stdout
+        except subprocess.CalledProcessError as e:
+            print(f"Error: {e}")
+            return None
 
-  def update_package(self, package_name):
-    # Update a specific package
-    try:
-      self.base.install(package_name)
-      self.base.resolve()
-      self.base.download_packages()
-      self.base.do_transaction()
-      print(f"Package '{package_name}' updated successfully.")
-    except dnf.exceptions.Error as e:
-      print("Error updating package:", e)
-
-    def search_package(self, package_name):
-      # Search for a package in the DNF repository
-      try:
-        query = self.base.sack.query()
-        matches = query.available().filter(name=package_name)
-        if matches:
-          for pkg in matches:
-            print(pkg.name)
-        else:
-          print("Package not found.")
-      except dnf.exceptions.Error as e:
-        print("Error searching package:", e)
-
-  def install_package(self, package_name):
-    # Install a package
-    try:
-      self.base.install(package_name)
-      self.base.resolve()
-      self.base.download_packages()
-      self.base.do_transaction()
-      print(f"Package '{package_name}' installed successfully.")
-    except dnf.exceptions.Error as e:
-      print("Error installing package:", e)
-
-  def remove_package(self, package_name):
-    # Remove a package
-    try:
-      self.base.remove(package_name)
-      self.base.resolve()
-      self.base.do_transaction()
-      print(f"Package '{package_name}' removed successfully.")
-    except dnf.exceptions.Error as e:
-      print("Error removing package:", e)
-
-  def clean_cache(self):
-  # Clean the DNF cache
-    try:
-      self.base.clean()
-      print("DNF cache cleaned successfully.")
-    except dnf.exceptions.Error as e:
-      print("Error cleaning cache:", e)
-
-"""
-# Example usage dnf 
-if __name__ == "__main__":
-    package_manager = PackageManager()
-    package_manager.search_package("firefox")
-    package_manager.install_package("firefox")
-    package_manager.remove_package("firefox")
-    package_manager.clean_cache()
-"""
-
-"""
-# Example usage apt mgr
-if __name__ == "__main__":
-    package_manager = PackageManager()
-    package_manager.search_package("firefox")
-    package_manager.install_package("firefox")
-    package_manager.remove_package("firefox")
-    package_manager.commit_changes()
-    package_manager.clear_cache()
-
-"""
-
-class PackageManager:
-
-  __packageManager = "undefined"
-  __newDict = {
-    "apt":{
-      
-      "install":AptMgr.install_package,
-      "remove":ApkMgr.remove_package,
-    },
-    "dnf":{},
-    "zypper":{},
-    "apk":{},
-    "pacman":{}
-  }
-  def __init__(self):
-    __packageManager = detect_package_manager()
-
-
-  def __verifyIfWasInited(self):
-    try:
-        if(self.__packageManager == 'undefined'):
-          raise Exception("Object not inited.")       
-    except Exception as e:
-      print(str(e))
-    
-  def install_package(self,package_name):    
-    self.__verifyIfWasInited(self)
-    
-
-  def remove_package(self,package_name):
-    self.__verifyIfWasInited(self)
-
-  def update_package(self,package_name):
-    self.__verifyIfWasInited(self)
-
-  def search_package(self,package_name):
-    self.__verifyIfWasInited(self)
-    
-  
