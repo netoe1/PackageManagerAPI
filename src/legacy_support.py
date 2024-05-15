@@ -361,6 +361,10 @@ class PacmanMgr:
         command = ["pacman", "-Syu"]
         return self._execute_command(command)
 
+    def update_package(self,package_name):
+      command = ["pacman", "-S",package_name]
+      return self._execute_command(command)  
+
     def _execute_command(self, command):
         try:
             result = subprocess.run(command, capture_output=True, text=True, check=True)
@@ -382,10 +386,12 @@ class ApkMgr:
         command = ["apk", "del", package_name]
         return self._execute_command(command)
 
-    def update_packages(self):
+    def update_all_packages(self):
         command = ["apk", "upgrade"]
         return self._execute_command(command)
-
+    def update_package(self,package_name):
+        command = ['apk','upgrade',package_name]
+        return self._execute_command(command)
     def _execute_command(self, command):
         try:
             result = subprocess.run(command, capture_output=True, text=True, check=True)
@@ -410,6 +416,9 @@ class ZypperMgr:
     def update_packages(self):
         command = ["zypper", "update"]
         return self._execute_command(command)
+    def update_package(self,package_name):
+        command = ['zypper','update',package_name]
+        return self._execute_command(command)  
 
     def _execute_command(self, command):
         try:

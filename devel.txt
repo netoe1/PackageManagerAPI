@@ -1,3 +1,17 @@
+
+
 Hoje eu fiz a api para o suporte legado.
 Preciso arrumar algumas coisas na classe de packageManager,
  e utilizar a api normal. Ela está dando erro pois eu troquei alguns códigos ali.
+
+
+ - 15/05/2024
+    Achei um bug nas classes de legadas, vou arrumar    
+    Estou fazendo um dicionário de interface para as api's  
+
+
+Para arrumar:
+    - Preciso arrumar funções das classes legadas e as classes modernas.
+
+
+Tudo está no trello!

@@ -340,14 +340,21 @@ library.  If this is what you want to do, use the GNU Lesser General
 Public License instead of this License.
 
 """
+# Default system api's
+import sys
+import os
 
 # Importing api's
 import apt_pkg
 import dnf  
 
-from utils import detect_package_manager
-from legacy_support import PacmanMgr,ApkMgr,ZypperMgr
 
+# Importing modules
+current_dir = os.path.dirname(os.path.abspath(__file__))
+src_dir = os.path.join(current_dir, 'src')
+sys.path.append(src_dir)
+
+from utils import detect_package_manager,valid_buf
 # Using Formal API.
 class AptMgr:
     def __init__(self):
@@ -355,6 +362,7 @@ class AptMgr:
         apt_pkg.init()
 
     def update_package(self, package_name):
+        valid_buf(package_name)
         # Update a specific package
         try:
             cache = apt_pkg.Cache()
@@ -367,6 +375,7 @@ class AptMgr:
 
     def search_package(self, package_name):
         # Search for a package in the APT cache
+        valid_buf(package_name)
         try:
             cache = apt_pkg.Cache()
             package_found = False
@@ -381,6 +390,7 @@ class AptMgr:
 
     def install_package(self, package_name):
         # Install a package
+        valid_buf(package_name)
         try:
             cache = apt_pkg.Cache()
             if package_name in cache.keys():
@@ -392,6 +402,7 @@ class AptMgr:
 
     def remove_package(self, package_name):
         # Remove a package
+        valid_buf(package_name)
         try:
             cache = apt_pkg.Cache()
             if package_name in cache.keys():
@@ -424,6 +435,7 @@ class DnfMgr:
 
   def update_package(self, package_name):
     # Update a specific package
+    valid_buf(package_name)
     try:
       self.base.install(package_name)
       self.base.resolve()
@@ -448,6 +460,7 @@ class DnfMgr:
 
   def install_package(self, package_name):
     # Install a package
+    valid_buf(package_name)
     try:
       self.base.install(package_name)
       self.base.resolve()
@@ -459,6 +472,7 @@ class DnfMgr:
 
   def remove_package(self, package_name):
     # Remove a package
+    valid_buf(package_name)
     try:
       self.base.remove(package_name)
       self.base.resolve()
@@ -467,47 +481,53 @@ class DnfMgr:
     except dnf.exceptions.Error as e:
       print("Error removing package:", e)
 
-  def clean_cache(self):
+  def search_package_dnf(self,package_name):
+    valid_buf(package_name)
+    try:
+        base = dnf.Base()
+        base.read_all_repos()
+        base.fill_sack()
+        matches = base.sack.query().filter(name=package_name)
+        results = []
+        for match in matches:
+            results.append({
+              'name': match.name,
+              'arch': match.arch,
+              'version': match.version,
+              'repo': match.repo.id,
+            })
+        self.clear_cache()
+        return results
+    except Exception as e:
+      print(f'[package-manager-dnf-err]: {e}')
+
+  def clear_cache(self):
   # Clean the DNF cache
     try:
       self.base.clean()
       print("DNF cache cleaned successfully.")
     except dnf.exceptions.Error as e:
       print("Error cleaning cache:", e)
-
-"""
-# Example usage dnf 
-if __name__ == "__main__":
-    package_manager = PackageManager()
-    package_manager.search_package("firefox")
-    package_manager.install_package("firefox")
-    package_manager.remove_package("firefox")
-    package_manager.clean_cache()
-"""
-
-"""
-# Example usage apt mgr
-if __name__ == "__main__":
-    package_manager = PackageManager()
-    package_manager.search_package("firefox")
-    package_manager.install_package("firefox")
-    package_manager.remove_package("firefox")
-    package_manager.commit_changes()
-    package_manager.clear_cache()
-
-"""
-
 class PackageManager:
 
   __packageManager = "undefined"
-  __newDict = {
+  __interface_to_classes = {
     "apt":{
-      
       "install":AptMgr.install_package,
-      "remove":ApkMgr.remove_package,
+      "remove":AptMgr.remove_package,
+      "search":AptMgr.search_package,
+      "clear":AptMgr.clear_cache,
+      "update":AptMgr.update_package
     },
-    "dnf":{},
-    "zypper":{},
+    "dnf":{
+      "install":DnfMgr.install_package,
+      "remove":DnfMgr.remove_package,
+      "search":DnfMgr.search_package,
+      "clear":DnfMgr.clear_cache,
+    },
+    "zypper":{
+        
+    },
     "apk":{},
     "pacman":{}
   }
@@ -525,7 +545,6 @@ class PackageManager:
   def install_package(self,package_name):    
     self.__verifyIfWasInited(self)
     
-
   def remove_package(self,package_name):
     self.__verifyIfWasInited(self)
 

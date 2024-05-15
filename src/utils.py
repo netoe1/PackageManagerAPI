@@ -26,9 +26,21 @@ __MANAGER_DIRS = {
 
 def detect_package_manager():
   try:
-    
-    for manager, path in __MANAGER_DIRS.items():
-      if os.path.exists(path):
-        return manager
+
+    vector = ['apk','apt','pacman','dnf','zypper']
+
+    for element in vector:
+        if(os.path.exists(__MANAGER_DIRS[element]['config'])):
+           return element
+        
+    raise Exception('Your package manager doesn\'t exist o isn\'t supported yet.')
   except Exception as e:
     return f"[PackageManager-err]: {e}"
+
+def valid_buf(buffer):
+    try:
+        buffer = str(buffer)
+        if(buffer == None or buffer == ''):
+           raise Exception(' You didn\'t set a valid buffer for usage!')
+    except Exception as e:
+        print(f'[internal-package-manager-err]:{e}')
