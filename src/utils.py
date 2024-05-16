@@ -1,4 +1,6 @@
 import os
+import sys
+import traceback
 
 __MANAGER_DIRS = {
     "apk": {
@@ -25,17 +27,18 @@ __MANAGER_DIRS = {
 
 
 def detect_package_manager():
-  try:
+    try:
 
-    vector = ['apk','apt','pacman','dnf','zypper']
+        vector = ['apk','apt','pacman','dnf','zypper']
 
-    for element in vector:
-        if(os.path.exists(__MANAGER_DIRS[element]['config'])):
-           return element
-        
-    raise Exception('Your package manager doesn\'t exist o isn\'t supported yet.')
-  except Exception as e:
-    return f"[PackageManager-err]: {e}"
+        for element in vector:
+            if(os.path.exists(__MANAGER_DIRS[element]['config'])):
+                return element
+            
+        raise Exception('Your package manager doesn\'t exist o isn\'t supported yet.')
+    except Exception as e:
+        traceback.print_exc()
+        sys.exit(1)
 
 def valid_buf(buffer):
     try:
@@ -43,4 +46,13 @@ def valid_buf(buffer):
         if(buffer == None or buffer == ''):
            raise Exception(' You didn\'t set a valid buffer for usage!')
     except Exception as e:
-        print(f'[internal-package-manager-err]:{e}')
+        traceback.print_exc()
+        sys.exit(1)
+
+def valid_list(getlist):
+    try:
+        if(type(getlist) != list):
+            raise Exception('The function parameter must be a list!')
+    except Exception as e:
+        traceback.print_exc()
+        sys.exit(1)
