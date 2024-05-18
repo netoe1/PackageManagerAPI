@@ -354,6 +354,13 @@ import subprocess
 import utils
 
 
+class PkgEnumOperation:
+    INSTALL = 0
+    REMOVE = 1
+    UPDATE = 2
+    UPGRADE = 3
+    SEARCH = 4
+    CLEAR_CACHE = 5
 
 class LegacyPackageMgr: 
     __legacy_support_dict = {
@@ -399,20 +406,76 @@ class LegacyPackageMgr:
         except Exception as e:
             traceback.print_exc()
             sys.exit(1)
+    
+    def ___verifyValidDictionary(self):
+        try:
+          if(not (self.__packageManager in self.__legacy_support_dict)):
+            raise Exception('Your package manager isn\'t for legacy support , please use the modern class.')
+        except Exception as e:
+          traceback.print_exc()
+          sys.exit(1)
+    
+    def ___internalExecCommand(self,enum_op,packageList):
+      try:
+        packages = ' '.join(packageList)
+        command = ''
+
+        match(enum_op):
+          case PkgEnumOperation.INSTALL:
+            command = self.__legacy_support_dict[self.__packageManager]['install_package']
+          case PkgEnumOperation.REMOVE:
+            command = self.__legacy_support_dict[self.__packageManager]['remove_package']
+          case PkgEnumOperation.UPDATE:
+              command = self.__legacy_support_dict[self.__packageManager]['update_package']
+          case PkgEnumOperation.UPGRADE:
+              command = self.__legacy_support_dict[self.__packageManager]['upgrade_package']
+          case PkgEnumOperation.SEARCH:
+              command = self.__legacy_support_dict[self.__packageManager]['search_package']
+          case _:
+            raise Exception('Invalid operation to exec valid command.')
+      except Exception as a:
+          traceback.print_exc()
+          sys.exit(1)
+
+      command = '' + packages
+      self.__exec_cmd(command)
+
+    def clearCache(self):
+      command = self.__legacy_support_dict[self.__packageManager]['clear_cache']
+      self.__exec_cmd(command)
 
     def install_packages(self,packageList):    
-        try:
-            utils.valid_list(packageList)
-            packages = ' '.join(packageList)
-            if(not (self.__packageManager in self.__legacy_support_dict)):
-                raise Exception('Your package manager isn\'t for legacy support , please use the modern class.')
-            command = self.__legacy_support_dict[self.__packageManager]['install_package']
-            command = command + ' ' + packages
-            print(command)
-        except Exception as e:
-            traceback.print_exc()
-            sys.exit(1)
+      utils.valid_list(packageList)
+      self.___verifyValidDictionary()
+      self.___internalExecCommand(PkgEnumOperation.INSTALL,packageList)
+      self.clearCache()
 
+    def remove_package(self,packageList):
+      utils.valid_list(packageList)
+      self.___verifyValidDictionary()
+      self.___internalExecCommand(PkgEnumOperation.REMOVE,packageList)
+      self.clearCache()
+    
+    def update_package(self,packageList):
+      utils.valid_list(packageList)
+      self.___verifyValidDictionary()
+      self.___internalExecCommand(PkgEnumOperation.UPDATE,packageList)
+      self.clearCache()
+
+    def upgrade_package(self,packageList):
+      utils.valid_list(packageList)
+      self.___verifyValidDictionary()
+      self.___internalExecCommand(PkgEnumOperation.UPGRADE,packageList)
+      self.clearCache()
+
+    def search_package(self,packageList):
+      utils.valid_list(packageList)
+      self.___verifyValidDictionary()
+      self.___internalExecCommand(PkgEnumOperation.SEARCH,packageList)
+      self.clearCache()
+    
+
+      
 
 
 
